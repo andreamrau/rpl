@@ -1,0 +1,19 @@
+Package: rpl
+Type: Package
+Title: Randomized pairwise likelihood method for complex statistical inferences
+Version: 0.0.1
+Date: 2021-11-08
+Author: Gildas Mazo, Dimitris Karlis, Andrea Rau
+Maintainer: Andrea Rau <andrea.rau@inrae.fr>
+Depends: R (>= 3.3.1)
+Imports: copula, pbivnorm, BiocParallel
+Suggests: knitr, rmarkdown, testthat
+Description: Randomized pairwise likelihood approach to enable computationally
+  efficient statistical inference, including the construction of confidence
+  intervals, in cases where the full likelihood is too complex to be used 
+  (e.g., multivariate count data).
+License: GPL (>=3)
+LazyLoad: no
+RoxygenNote: 7.1.1
+VignetteBuilder: knitr
+Encoding: UTF-8

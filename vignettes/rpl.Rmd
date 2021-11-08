@@ -1,0 +1,37 @@
+---
+title: "*rpl* package: Quick-start guide"
+author: "Gildas Mazo, Dimitris Karlis, and Andrea Rau"
+date: "November 2021"
+output: 
+  rmarkdown::html_vignette:
+    toc: true
+vignette: >
+  %\VignetteIndexEntry{rpl}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+*rpl* is a package that implements a randomized pairwise likelihood approach to 
+enable computationally efficient statistical inference, including the 
+construction of confidence intervals, in cases where the full likelihood is too 
+complex to be used (e.g., multivariate count data).
+
+We begin by loading the necessary packages for this vignette.
+
+```{r, include=FALSE}
+knitr::opts_chunk$set(dev='png')
+```
+
+```{r}
+library(rpl)
+```
+
+## Data simulation
+
+To illustrate, we begin by simulating some data ... TODO.
+
+## Reproducibility
+
+```{r}
+sessionInfo()
+```

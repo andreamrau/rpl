@@ -1,0 +1,12 @@
+  
+citHeader("To cite the R package 'rpl' in publications use:")  
+
+citEntry(entry   = "article",
+         title   = "A randomized pairwise likelihood method for complex statistical inferences",
+		 journal = "In revision",
+         year    = "2021",
+         author  = personList(
+           person(given="Gildas", family="Mazo"),
+	   person(given="Dimitris", family="Karlis"),
+	   person(given="Andrea", family="Rau")),
+         textVersion = "Mazo, G., Karlis, D., and Rau, A. (2021) A randomized pairwise likelihood method for complex statistical inferences. In revision. hal-03126621.")
