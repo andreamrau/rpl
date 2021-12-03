@@ -20,6 +20,7 @@
 #' method for complex statistical inferences. In revision. hal-03126621.
 #'
 #' @keywords multivariate
+#' @importFrom numDeriv grad
 #' @importFrom pbivnorm pbivnorm
 #' @importFrom copula rCopula normalCopula P2p
 #' @importFrom stats qnorm optimize cor optim ppois qpois rbinom runif
@@ -266,6 +267,84 @@ rpl_loglike <- function(par,
     }
 }
 
+#' Calculate standard errors for parameters estimated with the RPL
+#'
+#' @param mydata Data matrix
+#' @param parameters Vector providing estimated values for all parameters
+#' @param pi Bernoulli sampling parameter (0 < pi <= 1)
+#' @param offsets If needed, a matrix of offsets (optional)
+#' @param verbose If \code{TRUE}, include verbose output
+#'
+#' @return A named list containing the following:
+#' \itemize{
+#'    \item se - standard errors for each estimated parameter
+#'    \item parameters - user-provided estimated parameter values
+#' }
+#'
+#' @references
+#' Mazo, G., Karlis, D., Rau, A. (2021) A randomized pairwise likelihood
+#' method for complex statistical inferences. In revision. hal-03126621.
+#' @export
+#' @example /inst/examples/rpl-package.R
+#'
+rpl_se <- function(mydata, parameters, pi, offsets=NULL, verbose=FALSE) {
+
+    ##  mydata is a n x d matrix of data
+    ##  parameters is a vector of estimated parameters
+    ##    with d mean parameters at the begining and the
+    ##    correlation parameters after that using
+    ##    (1,2),(1,3),...,(1,d),(2,3),...,(2,d),...,(d-1,d)
+    ##  offsets is a set of offset, same dimension as mydta
+
+    prob <- pi
+    off <- offsets
+    d <- ncol(mydata)
+    n <- nrow(mydata)
+    if(is.null(off)) {
+        off <- matrix(1,n,d)
+    }
+    npar <- d + d*(d-1)/2
+    if(length(parameters) != npar)
+        stop("SE calculation only currently implemented for unstructured correlation matrices.")
+    all2 <- NULL
+    sde <- matrix(0, npar, npar)
+    xx <- mydata  ### just to check things we have to change it later
+    theta <- parameters
+    metr <- d
+    m2 <- 0
+
+    #### for all pairs
+    for(i in 1:(d-1) ) {
+        for(j in (i+1):d) {
+            m2 <- m2+1
+            metr <- metr+1
+            if(verbose) print(c(i,j))
+            sdetemp <- matrix(0, npar, npar)
+            nn <- 0
+
+            ### for all observations, try to estimate with Monte Carlo
+            for(k in 1:n) {
+                temp <- grad(dmass_offset,
+                             c(theta[i], theta[j], theta[metr]),
+                             x1=xx[k,i], x2=xx[k,j],
+                             off1=off[k,i], off2=off[k,j],
+                             method="simple")
+                #### in case of problems in the calculation we just
+                #### get rid of this
+                if((all(!is.na(temp))) & (all(temp!=0))) {
+                    sdtemp <- rep(0,npar)
+                    sdtemp[c(i,j,metr)] <- temp
+                    sdetemp <- sdetemp + sdtemp %*% t(sdtemp)
+                    nn <- nn + 1
+                }
+            }
+            sde <- sde + sdetemp/nn
+        }
+    }
+    sde <- solve(sde)/(n*prob)
+    se <- diag(sde)^0.5
+    return(list(se=se, parameters=theta))
+}
 
 #' Simulate multivariate Poisson data with a given correlation
 #' matrix structure using Gaussian copulas
@@ -466,6 +545,9 @@ fisher_trans <- function(r) {
 
 ## NOT EXPORTED: estimate Gaussian copula
 gaussian_copula <- function(u, v, a) {
+    ### to eliminate overflows we added the two lines
+    u <- (u==0)*(0.000000001) + (u>0)*u
+    v <- (v==0)*(0.000000001) + (v>0)*v
     temp <- pbivnorm(qnorm(u), qnorm(v), a)
     t <- !(is.finite(temp))
     return(temp)
@@ -480,6 +562,23 @@ dmass <- function(u, v, u2, v2, theta) {
     temp <- (temp <= 0) * (10^-180) + (temp > 0) * temp
     return(temp)
 }
+
+## NOT EXPORTED: calculate density mass with offsets (same as dmass otherwise)
+dmass_offset <- function(theta,x1,x2,off1,off2) {
+    m <- theta[1:2]
+    alpha <- theta[3]
+    u <- ppois(x1, m[1]*off1)
+    v2 <- ppois(x2-1, m[2]*off2)
+    u2 <- ppois(x1-1, m[1]*off1)
+    v <- ppois(x2, m[2]*off2)
+    temp <- gaussian_copula(u2, v2, alpha) -
+        gaussian_copula(u, v2, alpha) -
+        gaussian_copula(u2, v, alpha) +
+        gaussian_copula(u, v, alpha)
+    temp <- (temp <= 0) * (10^-180) + (temp > 0) * temp
+    return(log(temp))
+}
+
 
 ## NOT EXPORTED: calculate negative log-likelihood
 contribution <- function(u, v, u2, v2, theta) {

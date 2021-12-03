@@ -22,6 +22,7 @@ of this package are as follows:
 
 - `rpl_optim`: optimize model parameters for a given correlation matrix structure (`"unstructured"`,
 `"exchangeable"`, `"block_exchangeable"`, or `"factor"`)
+- `rpl_se`: calculate standard errors for model parameters for a given correlation matrix structure (`"unstructured"`)
 - `init`: obtain reasonable values to initialize marginal and correlation parameters for use in the `rpl_optim` function
 - `simulate_mvt_poisson`: simulate multivariate Poisson data with a given correlation matrix structure 
 (`"unstructured"`,

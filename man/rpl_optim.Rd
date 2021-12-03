@@ -73,6 +73,12 @@ sim_unstructured <-
 init_unstructured <- init(sim_unstructured$data, type = "unstructured")
 run_unstructured <- rpl_optim(init_unstructured, sim_unstructured$data, pi = 0.1)
 
+## Calculate SE of estimated parameters
+se_unstructured <- rpl_se(mydata=sim_unstructured$data,
+                          parameters=run_unstructured$par,
+                          pi = 0.1,
+                          offsets=NULL, verbose=FALSE)
+
 
 ## 3) Simulate one-factor correlation matrix -----------------------------------
 d <- 3
