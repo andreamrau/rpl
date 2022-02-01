@@ -302,8 +302,12 @@ rpl_se <- function(mydata, parameters, pi, offsets=NULL, verbose=FALSE) {
     off <- offsets
     d <- ncol(mydata)
     n <- nrow(mydata)
+    theta <- parameters
     if(is.null(off)) {
         off <- matrix(1,n,d)
+    } else {
+        ## Put means on exponential scale if offsets are included
+        theta[1:d] <- exp(theta[1:d])
     }
     npar <- d + d*(d-1)/2
     if(length(parameters) != npar)
@@ -311,7 +315,6 @@ rpl_se <- function(mydata, parameters, pi, offsets=NULL, verbose=FALSE) {
     all2 <- NULL
     sde <- matrix(0, npar, npar)
     xx <- mydata  ### just to check things we have to change it later
-    theta <- parameters
     metr <- d
     m2 <- 0
 
@@ -327,7 +330,7 @@ rpl_se <- function(mydata, parameters, pi, offsets=NULL, verbose=FALSE) {
             ### for all observations, try to estimate with Monte Carlo
             for(k in 1:n) {
                 temp <- grad(dmass_offset,
-                             c(exp(theta[i]), exp(theta[j]), theta[metr]),
+                             c(theta[i], theta[j], theta[metr]),
                              x1=xx[k,i], x2=xx[k,j],
                              off1=off[k,i], off2=off[k,j],
                              method="simple")
