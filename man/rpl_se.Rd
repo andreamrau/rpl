@@ -9,7 +9,8 @@ rpl_se(mydata, parameters, pi, offsets = NULL, verbose = FALSE)
 \arguments{
 \item{mydata}{Data matrix}
 
-\item{parameters}{Vector providing estimated values for all parameters}
+\item{parameters}{Vector providing estimated values for all parameters (means
+followed by correlations)}
 
 \item{pi}{Bernoulli sampling parameter (0 < pi <= 1)}
 

@@ -17,7 +17,7 @@ rpl_loglike(
 )
 }
 \arguments{
-\item{par}{Vector providing parameter values}
+\item{par}{Vector providing parameter values (means followed by correlations)}
 
 \item{mydata}{Data matrix}
 

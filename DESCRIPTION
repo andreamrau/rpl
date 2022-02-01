@@ -1,8 +1,8 @@
 Package: rpl
 Type: Package
 Title: Randomized pairwise likelihood method for complex statistical inferences
-Version: 0.0.2
-Date: 2021-12-02
+Version: 0.0.3
+Date: 2022-01-31
 Author: Gildas Mazo, Dimitris Karlis, Andrea Rau
 Maintainer: Andrea Rau <andrea.rau@inrae.fr>
 Depends: R (>= 3.3.1)

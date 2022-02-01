@@ -18,7 +18,8 @@ rpl_optim(
 )
 }
 \arguments{
-\item{param_init}{Vector providing initial values for all parameters}
+\item{param_init}{Vector providing initial values for all parameters (means
+followed by correlations)}
 
 \item{mydata}{Data matrix}
 

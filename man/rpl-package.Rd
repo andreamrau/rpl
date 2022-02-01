@@ -12,7 +12,7 @@ complex to be used (e.g., multivariate count data).
 }
 \details{
 \tabular{ll}{ Package: \tab rpl\cr Type: \tab Package\cr Version:
-\tab 0.0.1\cr Date: \tab 2021-11-08\cr License: \tab GPL (>=3.3.1)\cr LazyLoad:
+\tab 0.0.3\cr Date: \tab 2022-01-31\cr License: \tab GPL (>=3.3.1)\cr LazyLoad:
 \tab no\cr }
 }
 \references{

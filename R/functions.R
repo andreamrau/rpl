@@ -6,7 +6,7 @@
 #' complex to be used (e.g., multivariate count data).
 #'
 #' \tabular{ll}{ Package: \tab rpl\cr Type: \tab Package\cr Version:
-#' \tab 0.0.1\cr Date: \tab 2021-11-08\cr License: \tab GPL (>=3.3.1)\cr LazyLoad:
+#' \tab 0.0.3\cr Date: \tab 2022-01-31\cr License: \tab GPL (>=3.3.1)\cr LazyLoad:
 #' \tab no\cr }
 #'
 #' @name rpl-package
@@ -29,7 +29,8 @@ NULL
 
 #' Wrapper for the 'optim' function (includes Fisher transformation)
 #'
-#' @param param_init Vector providing initial values for all parameters
+#' @param param_init Vector providing initial values for all parameters (means
+#' followed by correlations)
 #' @param mydata Data matrix
 #' @param pi Bernoulli sampling parameter (0 < pi <= 1)
 #' @param offsets If needed, a matrix of offsets (optional)
@@ -86,7 +87,7 @@ rpl_optim <- function(param_init, mydata, pi, offsets=NULL,
 #' par is a vector of mean parameters followed by Fisher-transformed
 #' correlation parameters
 #'
-#' @param par Vector providing parameter values
+#' @param par Vector providing parameter values (means followed by correlations)
 #' @param mydata Data matrix
 #' @param pi Bernoulli sampling parameter (0 < pi <= 1)
 #' @param offsets If needed, a matrix of offsets (optional)
@@ -270,7 +271,8 @@ rpl_loglike <- function(par,
 #' Calculate standard errors for parameters estimated with the RPL
 #'
 #' @param mydata Data matrix
-#' @param parameters Vector providing estimated values for all parameters
+#' @param parameters Vector providing estimated values for all parameters (means
+#' followed by correlations)
 #' @param pi Bernoulli sampling parameter (0 < pi <= 1)
 #' @param offsets If needed, a matrix of offsets (optional)
 #' @param verbose If \code{TRUE}, include verbose output
@@ -325,7 +327,7 @@ rpl_se <- function(mydata, parameters, pi, offsets=NULL, verbose=FALSE) {
             ### for all observations, try to estimate with Monte Carlo
             for(k in 1:n) {
                 temp <- grad(dmass_offset,
-                             c(theta[i], theta[j], theta[metr]),
+                             c(exp(theta[i]), exp(theta[j]), theta[metr]),
                              x1=xx[k,i], x2=xx[k,j],
                              off1=off[k,i], off2=off[k,j],
                              method="simple")
