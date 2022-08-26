@@ -325,7 +325,8 @@ rpl_se <- function(mydata, parameters, pi, offsets=NULL, block_indices = NULL,
         ## Exchangeable correlation matrix
         stop("SE calculation only currently implemented for unstructured and factorized correlation matrices.")
      } else if(npar == (d + (d*d-d)/2)) {
-        cat("Calculating SE for unstructured correlation matrix...", "\n")
+         if(verbose)
+             cat("Calculating SE for unstructured correlation matrix...", "\n")
         ## Unstructured correlation matrix
         for(i in 1:(d-1) ) { ## for all pairs
             for(j in (i+1):d) {
@@ -357,7 +358,8 @@ rpl_se <- function(mydata, parameters, pi, offsets=NULL, block_indices = NULL,
         }
      } else if(npar == (d + d)) {
          ## One-factor correlation matrix: corr(i,j) = theta_i * theta_j
-         cat("Calculating SE for factorized correlation matrix...", "\n")
+         if(verbose)
+             cat("Calculating SE for factorized correlation matrix...", "\n")
          parameter_index <- c(rep(0, d), 1:d)
          for(i in 1:(d-1) ) { ## for all pairs
              for(j in (i+1):d) {
