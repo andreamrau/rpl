@@ -82,15 +82,21 @@ se_unstructured <- rpl_se(mydata=sim_unstructured$data,
 
 
 ## 3) Simulate one-factor correlation matrix -----------------------------------
-d <- 3
+d <- 4
 sim_factor <-
     simulate_mvt_poisson(n = 1000, d = d,
                          param = list(margins = rep(1, d),
-                                      disp = seq(0, 1, length = 3)),
+                                      disp = seq(0, 1, length = d)),
                          type = "factor")
 
 init_factor <- init(sim_factor$data, type = "factor")
 run_factor <- rpl_optim(init_factor, sim_factor$data, pi = 0.1)
+
+## Calculate SE of estimated parameters
+se_factor <- rpl_se(mydata=sim_factor$data,
+                          parameters=run_factor$par,
+                          pi = 0.1,
+                          offsets=NULL, verbose=FALSE)
 
 ## 4) Simulate block-exchangeable correlation matrix ---------------------------
 d <- 10

@@ -4,7 +4,14 @@
 \alias{rpl_se}
 \title{Calculate standard errors for parameters estimated with the RPL}
 \usage{
-rpl_se(mydata, parameters, pi, offsets = NULL, verbose = FALSE)
+rpl_se(
+  mydata,
+  parameters,
+  pi,
+  offsets = NULL,
+  block_indices = NULL,
+  verbose = FALSE
+)
 }
 \arguments{
 \item{mydata}{Data matrix}
@@ -15,6 +22,9 @@ followed by correlations)}
 \item{pi}{Bernoulli sampling parameter (0 < pi <= 1)}
 
 \item{offsets}{If needed, a matrix of offsets (optional)}
+
+\item{block_indices}{List of vectors providing indices for each block
+for blockwise exchangeable correlation matrices}
 
 \item{verbose}{If \code{TRUE}, include verbose output}
 }
@@ -59,15 +69,21 @@ se_unstructured <- rpl_se(mydata=sim_unstructured$data,
 
 
 ## 3) Simulate one-factor correlation matrix -----------------------------------
-d <- 3
+d <- 4
 sim_factor <-
     simulate_mvt_poisson(n = 1000, d = d,
                          param = list(margins = rep(1, d),
-                                      disp = seq(0, 1, length = 3)),
+                                      disp = seq(0, 1, length = d)),
                          type = "factor")
 
 init_factor <- init(sim_factor$data, type = "factor")
 run_factor <- rpl_optim(init_factor, sim_factor$data, pi = 0.1)
+
+## Calculate SE of estimated parameters
+se_factor <- rpl_se(mydata=sim_factor$data,
+                          parameters=run_factor$par,
+                          pi = 0.1,
+                          offsets=NULL, verbose=FALSE)
 
 ## 4) Simulate block-exchangeable correlation matrix ---------------------------
 d <- 10

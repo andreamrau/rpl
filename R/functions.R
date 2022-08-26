@@ -139,6 +139,8 @@ rpl_loglike <- function(par,
         par <- c(par[1:d],rep(par[d+1],d*(d-1)/2))
     } else if(length(par) == (d + d)) {
         ## One-factor correlation matrix: corr(i,j) = theta_i * theta_j
+        if(d <= 3)
+            stop("Are you sure you want factorized correlations with d <= 3?")
         theta <- par[-(1:d)]
         corrmat <- outer(theta, theta)
         diag(corrmat) <- 1
@@ -275,6 +277,8 @@ rpl_loglike <- function(par,
 #' followed by correlations)
 #' @param pi Bernoulli sampling parameter (0 < pi <= 1)
 #' @param offsets If needed, a matrix of offsets (optional)
+#' @param block_indices List of vectors providing indices for each block
+#' for blockwise exchangeable correlation matrices
 #' @param verbose If \code{TRUE}, include verbose output
 #'
 #' @return A named list containing the following:
@@ -289,7 +293,8 @@ rpl_loglike <- function(par,
 #' @export
 #' @example /inst/examples/rpl-package.R
 #'
-rpl_se <- function(mydata, parameters, pi, offsets=NULL, verbose=FALSE) {
+rpl_se <- function(mydata, parameters, pi, offsets=NULL, block_indices = NULL,
+                   verbose=FALSE) {
 
     ##  mydata is a n x d matrix of data
     ##  parameters is a vector of estimated parameters
@@ -302,53 +307,95 @@ rpl_se <- function(mydata, parameters, pi, offsets=NULL, verbose=FALSE) {
     off <- offsets
     d <- ncol(mydata)
     n <- nrow(mydata)
-    theta <- parameters
     if(is.null(off)) {
         off <- matrix(1,n,d)
     } else {
         ## Put means on exponential scale if offsets are included
-        theta[1:d] <- exp(theta[1:d])
+        parameters[1:d] <- exp(parameters[1:d])
     }
-    npar <- d + d*(d-1)/2
-    if(length(parameters) != npar)
-        stop("SE calculation only currently implemented for unstructured correlation matrices.")
+    npar <- length(parameters)
     all2 <- NULL
     sde <- matrix(0, npar, npar)
     xx <- mydata  ### just to check things we have to change it later
     metr <- d
     m2 <- 0
 
-    #### for all pairs
-    for(i in 1:(d-1) ) {
-        for(j in (i+1):d) {
-            m2 <- m2+1
-            metr <- metr+1
-            if(verbose) print(c(i,j))
-            sdetemp <- matrix(0, npar, npar)
-            nn <- 0
+    ## Determine structure of correlation matrix
+    if(npar == (d+1)) {
+        ## Exchangeable correlation matrix
+        stop("SE calculation only currently implemented for unstructured and factorized correlation matrices.")
+     } else if(npar == (d + (d*d-d)/2)) {
+        cat("Calculating SE for unstructured correlation matrix...", "\n")
+        ## Unstructured correlation matrix
+        for(i in 1:(d-1) ) { ## for all pairs
+            for(j in (i+1):d) {
+                m2 <- m2+1
+                metr <- metr+1
+                if(verbose) print(c(i,j))
+                sdetemp <- matrix(0, npar, npar)
+                nn <- 0
 
-            ### for all observations, try to estimate with Monte Carlo
-            for(k in 1:n) {
-                temp <- grad(dmass_offset,
-                             c(theta[i], theta[j], theta[metr]),
-                             x1=xx[k,i], x2=xx[k,j],
-                             off1=off[k,i], off2=off[k,j],
-                             method="simple")
-                #### in case of problems in the calculation we just
-                #### get rid of this
-                if((all(!is.na(temp))) & (all(temp!=0))) {
-                    sdtemp <- rep(0,npar)
-                    sdtemp[c(i,j,metr)] <- temp
-                    sdetemp <- sdetemp + sdtemp %*% t(sdtemp)
-                    nn <- nn + 1
+                ### for all observations, try to estimate with Monte Carlo
+                for(k in 1:n) {
+                    temp <- grad(dmass_offset,
+                                 c(parameters[i], parameters[j],
+                                   parameters[metr]),
+                                 x1=xx[k,i], x2=xx[k,j],
+                                 off1=off[k,i], off2=off[k,j],
+                                 method="simple")
+                    #### in case of problems in the calculation we just
+                    #### get rid of this
+                    if((all(!is.na(temp))) & (all(temp!=0))) {
+                        sdtemp <- rep(0,npar)
+                        sdtemp[c(i,j,metr)] <- temp
+                        sdetemp <- sdetemp + sdtemp %*% t(sdtemp)
+                        nn <- nn + 1
+                    }
                 }
+                sde <- sde + sdetemp/nn
             }
-            sde <- sde + sdetemp/nn
         }
+     } else if(npar == (d + d)) {
+         ## One-factor correlation matrix: corr(i,j) = theta_i * theta_j
+         cat("Calculating SE for factorized correlation matrix...", "\n")
+         parameter_index <- c(rep(0, d), 1:d)
+         for(i in 1:(d-1) ) { ## for all pairs
+             for(j in (i+1):d) {
+                 metr <- which(parameter_index %in% c(i,j))
+                 if(verbose) print(c(i,j))
+                 sdetemp <- matrix(0, npar, npar)
+                 nn <- 0
+                 ### for all observations, try to estimate with Monte Carlo
+                 for(k in 1:n) {
+                     temp <- grad(dmass_offset,
+                                  c(parameters[i], parameters[j], parameters[metr]),
+                                  x1=xx[k,i], x2=xx[k,j],
+                                  off1=off[k,i], off2=off[k,j],
+                                  factorized=TRUE,
+                                  method="simple")
+                     #### in case of problems in the calculation we just
+                     #### get rid of this
+                     if((all(!is.na(temp))) & (all(temp!=0))) {
+                         sdtemp <- rep(0,npar)
+                         sdtemp[c(i,j,metr)] <- temp
+                         sdetemp <- sdetemp + sdtemp %*% t(sdtemp)
+                         nn <- nn + 1
+                     }
+                 }
+                 sde <- sde + sdetemp/nn
+             }
+         }
+    } else if(!is.null(block_indices)) {
+        ## Block exchangeable correlation matrix
+        stop("SE calculation only currently implemented for unstructured and factorized correlation matrices.")
+    } else {
+        stop("No other types of correlation matrices currently supported.")
     }
+
+    ## Calculate standard error by inverting S
     sde <- solve(sde)/(n*prob)
     se <- diag(sde)^0.5
-    return(list(se=se, parameters=theta))
+    return(list(se=se, parameters=parameters))
 }
 
 #' Simulate multivariate Poisson data with a given correlation
@@ -392,6 +439,8 @@ simulate_mvt_poisson <- function(n = 1000, d = 4,
             mydata[,i] <- qpois(u[,i], param$margins[i])
         }
     } else if(type == "factor") {
+        if(d <= 3)
+            stop("Are you sure you want factorized correlations with d <= 3?")
         corrmat <- outer(param$disp, param$disp)
         u <- rCopula(n, normalCopula(P2p(corrmat), dim = d, dispstr="un"))
         mydata <- matrix(NA, nrow = nrow(u), ncol = ncol(u))
@@ -524,6 +573,9 @@ init <- function(mydata, type = "unstructured", pi=NULL,
         }
         param_init <- c(PoissonMeans, theta)
     } else if(type == "factor") {
+        if(d <= 3) {
+            stop("Are you sure you want factorized correlations with d <= 3?")
+        }
         tmpmat <- cor(mydata, method="pearson")
         initinit <- runif(d, min = 0, max = 1)
         o <- optim(
@@ -569,9 +621,13 @@ dmass <- function(u, v, u2, v2, theta) {
 }
 
 ## NOT EXPORTED: calculate density mass with offsets (same as dmass otherwise)
-dmass_offset <- function(theta,x1,x2,off1,off2) {
+dmass_offset <- function(theta,x1,x2,off1,off2,factorized=FALSE) {
     m <- theta[1:2]
-    alpha <- theta[3]
+    if(!factorized) {
+        alpha <- theta[3]
+    } else {
+        alpha <- theta[3]*theta[4]
+    }
     u <- ppois(x1, m[1]*off1)
     v2 <- ppois(x2-1, m[2]*off2)
     u2 <- ppois(x1-1, m[1]*off1)
