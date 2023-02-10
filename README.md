@@ -15,7 +15,7 @@ devtools::install_github("andreamrau/rpl", build_vignettes=TRUE)
 library(rpl)
 ```
 
-*rpl* implements an algorithm for a randomized pairwise likelihood approach to enable computationally
+*rpl* implements an algorithm for a randomized pairwise likelihood approach that enables computationally
 efficient statistical inference, including the construction of confidence intervals, in cases where 
 the full likelihood is too complex to be used (e.g., multivariate count data). The primary functions
 of this package are as follows:
