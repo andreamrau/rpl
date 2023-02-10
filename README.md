@@ -1,6 +1,6 @@
 # rpl: Randomized pairwise likelihood method for complex statistical inferences
 
-The *rpl* package can be installed as follows :
+The *rpl* package can be installed by using the following commands:
 
 ```
 library(devtools)
