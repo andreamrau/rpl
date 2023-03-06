@@ -285,6 +285,8 @@ rpl_loglike <- function(par,
 #' \itemize{
 #'    \item se - standard errors for each estimated parameter
 #'    \item parameters - user-provided estimated parameter values
+#'    \item S - estimated S matrix
+#'    \item Sinv - estimated S^(-1) matrix
 #' }
 #'
 #' @references
@@ -395,9 +397,11 @@ rpl_se <- function(mydata, parameters, pi, offsets=NULL, block_indices = NULL,
     }
 
     ## Calculate standard error by inverting S
-    sde <- solve(sde)/(n*prob)
+	S <- sde
+    Sinv <- solve(S)
+    sde <- Sinv / (n*prob)
     se <- diag(sde)^0.5
-    return(list(se=se, parameters=parameters))
+    return(list(se=se, parameters=parameters, S=S, Sinv=Sinv))
 }
 
 #' Simulate multivariate Poisson data with a given correlation

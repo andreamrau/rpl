@@ -33,6 +33,8 @@ A named list containing the following:
 \itemize{
    \item se - standard errors for each estimated parameter
    \item parameters - user-provided estimated parameter values
+   \item S - estimated S matrix
+   \item Sinv - estimated S^(-1) matrix
 }
 }
 \description{
