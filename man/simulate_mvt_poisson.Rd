@@ -9,6 +9,7 @@ simulate_mvt_poisson(
   n = 1000,
   d = 4,
   param,
+  offsets = NULL,
   type = "unstructured",
   block_indices = NULL
 )
@@ -23,6 +24,8 @@ of parameters to be used for simulation. Parameters
 should first include marginal parameters, then vectorized correlation parameters
 in lexicographical order. The size of the \code{disp} vector depends
 on the \code{type} of correlation matrix structure to be simulated.}
+
+\item{offsets}{If needed, a matrix of offsets (optional)}
 
 \item{type}{Type of correlation matrix structure to be simulated:
 \code{unstructured} ((d^2 - d)/2 correlation parameters),

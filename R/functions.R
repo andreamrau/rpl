@@ -6,7 +6,7 @@
 #' complex to be used (e.g., multivariate count data).
 #'
 #' \tabular{ll}{ Package: \tab rpl\cr Type: \tab Package\cr Version:
-#' \tab 0.0.3\cr Date: \tab 2022-01-31\cr License: \tab GPL (>=3.3.1)\cr LazyLoad:
+#' \tab 0.0.6\cr Date: \tab 2023-03-29\cr License: \tab GPL (>=3.3.1)\cr LazyLoad:
 #' \tab no\cr }
 #'
 #' @name rpl-package
@@ -414,6 +414,7 @@ rpl_se <- function(mydata, parameters, pi, offsets=NULL, block_indices = NULL,
 #' should first include marginal parameters, then vectorized correlation parameters
 #' in lexicographical order. The size of the \code{disp} vector depends
 #' on the \code{type} of correlation matrix structure to be simulated.
+#' @param offsets If needed, a matrix of offsets (optional)
 #' @param type Type of correlation matrix structure to be simulated:
 #' \code{unstructured} ((d^2 - d)/2 correlation parameters),
 #' \code{exchangeable} (1 correlation parameter),
@@ -426,23 +427,33 @@ rpl_se <- function(mydata, parameters, pi, offsets=NULL, block_indices = NULL,
 #' \item{data }{Matrix of simulated data}
 #' \item{param }{True parameter values used to simulate data}
 #' @export
-#'
 simulate_mvt_poisson <- function(n = 1000, d = 4,
                                  param,
+                                 offsets = NULL,
                                  type = "unstructured",
                                  block_indices = NULL) {
+
+    if(is.null(offsets)) {
+        m <- matrix(param$margins, nrow=n, ncol=d, byrow=TRUE)
+    } else {
+        ## log(E(counts)) = log(offset) + X\beta => E(counts) = exp(log(offset) + X\beta)
+        m <- matrix(0, nrow=n, ncol=d)
+        for(i in 1:d) {
+            m[,i] <- exp(param$margins[i] + log(offsets[,i]))
+        }
+    }
+
     if(type == "exchangeable") {
-        m <- param$margins
         u <- rCopula(n, normalCopula(param$disp, dim = d))
         mydata <- matrix(NA, nrow = nrow(u), ncol = ncol(u))
         for(i in 1:d) {
-            mydata[,i] <- qpois(u[,i], m[i])
+            mydata[,i] <- qpois(u[,i], m[,i])
         }
     } else if(type == "unstructured") {
         u <- rCopula(n, normalCopula(param$disp, dim = d, dispstr="un"))
         mydata <- matrix(NA, nrow = nrow(u), ncol = ncol(u))
         for(i in 1:d) {
-            mydata[,i] <- qpois(u[,i], param$margins[i])
+            mydata[,i] <- qpois(u[,i], m[,i])
         }
     } else if(type == "factor") {
         if(d <= 3)
@@ -451,7 +462,7 @@ simulate_mvt_poisson <- function(n = 1000, d = 4,
         u <- rCopula(n, normalCopula(P2p(corrmat), dim = d, dispstr="un"))
         mydata <- matrix(NA, nrow = nrow(u), ncol = ncol(u))
         for(i in 1:d) {
-            mydata[,i] <- qpois(u[,i], param$margins[i])
+            mydata[,i] <- qpois(u[,i], m[,i])
         }
     } else if(type == "block_exchangeable") {
         if(is.null(block_indices)) {
@@ -474,11 +485,12 @@ simulate_mvt_poisson <- function(n = 1000, d = 4,
         u <- rCopula(n, normalCopula(P2p(corrmat), dim = d, dispstr="un"))
         mydata <- matrix(NA, nrow = nrow(u), ncol = ncol(u))
         for(i in 1:d) {
-            mydata[,i] <- qpois(u[,i], param$margins[i])
+            mydata[,i] <- qpois(u[,i], m[,i])
         }
     } else {
         stop("No other simulation strategies currently supported.")
     }
+
     return(list(data = mydata, param = param))
 }
 
